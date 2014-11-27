@@ -15,7 +15,7 @@ extern "C" {
 #define FILTER_BLOSC 32001
 
 /* Register the filter with the library */
-int register_blosc(char **version, char **date);
+DLL_EXPORT int register_blosc(char **version, char **date);
 
 #ifdef __cplusplus
 }
