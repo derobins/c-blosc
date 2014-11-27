@@ -18,7 +18,6 @@ else(MSVC)
 endif(MSVC)
 include_directories(${HDF5_INCLUDE_DIRS})
 
-
 # targets
 add_library(blosc_filter_shared SHARED ${SOURCES})
 set_target_properties(blosc_filter_shared PROPERTIES OUTPUT_NAME blosc_filter)
@@ -31,7 +30,10 @@ if(BUILD_STATIC)
     target_link_libraries(blosc_filter_static blosc_static ${HDF5_LIBRARIES})
 endif(BUILD_STATIC)
 
-# have to copy blosc dlls for Visual Studio
+# Have to copy blosc dlls for Visual Studio
+#
+# TODO: Ensure that HDF5 dlls are either copied to the test directory or
+#       available in via the PATH on Windows.
 if(MSVC)
     add_custom_command(
         TARGET      blosc_filter_shared
@@ -46,14 +48,20 @@ endif(MSVC)
 install(FILES blosc_filter.h DESTINATION include COMPONENT HDF5_FILTER_DEV)
 install(TARGETS blosc_filter_shared DESTINATION lib COMPONENT HDF5_FILTER)
 if(BUILD_STATIC)
-    install(
-        TARGETS blosc_filter_static DESTINATION lib COMPONENT HDF5_FILTER_DEV)
+    install(TARGETS blosc_filter_static DESTINATION lib COMPONENT HDF5_FILTER_DEV)
 endif(BUILD_STATIC)
-
 
 # test
 if(BUILD_TESTS)
-    add_executable(example example.c)
-    target_link_libraries(example blosc_filter_static ${HDF5_LIBRARIES})
-    add_test(test_hdf5_filter example)
+    # static filter
+    if(BUILD_STATIC)
+        add_executable(filter_example_static filter_example.c)
+        target_link_libraries(filter_example_static blosc_filter_static ${HDF5_LIBRARIES})
+        add_test(test_hdf5_filter_static filter_example_static)
+    endif(BUILD_STATIC)
+
+    # dynamic filter
+    add_executable(filter_example_shared filter_example.c)
+    target_link_libraries(filter_example_shared blosc_filter_shared ${HDF5_LIBRARIES})
+    add_test(test_hdf5_filter_shared filter_example_shared)
 endif(BUILD_TESTS)
